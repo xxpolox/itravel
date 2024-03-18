@@ -1,5 +1,6 @@
 import streamlit as st
 import time
+import datetime
 import requests
 import json
 
@@ -19,11 +20,55 @@ def map_pref(preferencia):
     pref_mapping = {"Ciudad": "city", "Montaña": "mnt", "Mar": "sea"}
     return pref_mapping.get(preferencia, preferencia)
 
+def set_state(i):
+    st.session_state.stage = i
+
+
+def guardarMensaje(mensaje, state):
+    print(f"Guardando.... {mensaje}")
+    st.session_state.messages.append({"role": "user", "content": mensaje})
+    # Muestra el mensaje del usuario en el contenedor de mensajes del usuario
+    
+    set_state(state)
+
+def guardarEdad(edad, state):
+    print(f"Guardando.... {edad}")
+    st.session_state.messages.append({"role": "user", "content": edad})
+    # Muestra el mensaje del usuario en el contenedor de mensajes del usuario
+    
+    set_state(state)
+
+def guardarOrigen(origen, state):
+    print(f"Guardando.... {origen}")
+    st.session_state.messages.append({"role": "user", "content": origen})
+    # Muestra el mensaje del usuario en el contenedor de mensajes del usuario
+    
+    set_state(state)
+
+def guardarFecha(fecha, state):
+    print(f"Guardando.... {fecha}")
+    st.session_state.messages.append({"role": "user", "content": fecha})
+    # Muestra el mensaje del usuario en el contenedor de mensajes del usuario
+    
+    set_state(state)
+
 st.title("iTravel Assistant - Planificación de Viajes")
 
 # Inicializar historial de chat
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+if 'stage' not in st.session_state:
+    st.session_state.stage = 0
+
+if 'estadoEdad' not in st.session_state:
+    st.session_state.estadoEdad = 0
+
+if 'estadoOrigen' not in st.session_state:
+    st.session_state.estadoOrigen = 0
+
+if 'estadoFecha' not in st.session_state:
+    st.session_state.estadoFecha = 0
 
 # Mostrar mensajes del historial en la recarga de la aplicación
 for message in st.session_state.messages:
@@ -33,14 +78,15 @@ for message in st.session_state.messages:
 # Preguntas secuenciales
 questions = [
     "Hola, bienvenido a iTravel Assistant. Estoy aquí para ayudarte en la planificación de tu viaje. Te haré algunas preguntas que me permitirán recomendarte un destino turístico. ¿Estás de acuerdo?",
-    "Muy bien!, favor dame tu nombre",
     "Con qué genero te identificas? (Hombre, Mujer, Otro)",
     "Cuántos años tienes?",
     "Cuál es tu preferencia de viaje? (Ciudad, Montaña, Mar)",
     "Desde qué país saldrás?",
-    "y por último, en qué fecha planeas viajar? (AAAA-MM-DD)",
+    "y por último, en qué fecha planeas viajar?",
     # Agrega más preguntas según sea necesario
 ]
+
+print(f"Stage_inicial: {st.session_state.stage}")
 
 # Índice para rastrear la pregunta actual
 if "indice" not in st.session_state:
@@ -50,31 +96,138 @@ if "indice" not in st.session_state:
     with st.chat_message("assistant"):
         response = st.write_stream(response_generator(current_question))
     st.session_state.messages.append({"role": "assistant", "content": response})
-    st.session_state.indice += 1
+    st.session_state.indice = 1
 
-if prompt := st.chat_input("Mensaje iTravel"):
-    # Agrega el mensaje del usuario al historial de chat
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    # Muestra el mensaje del usuario en el contenedor de mensajes del usuario
-    with st.chat_message("user"):
-        st.markdown(prompt)
-    # Muestra la pregunta del asistente en el contenedor de mensajes del asistente
-    if st.session_state.indice < len(questions):
+if st.session_state.stage == 0:
+    print("dentro de stage == 0")
+    if st.button('Si', on_click=guardarMensaje, args=["Si", 1]):
+        with st.chat_message("user"):
+            st.markdown("Si")
+
+    if st.button('No', on_click=guardarMensaje, args=["No", 1]):
+        with st.chat_message("user"):
+            st.markdown("No")
+    
+    
+
+if st.session_state.stage == 1:
+    print("dentro de stage == 1")
+    current_question = questions[st.session_state.indice]
+    with st.chat_message("assistant"):
+        response = st.write_stream(response_generator(current_question))
+    # Agrega la respuesta del asistente al historial de chat
+    st.session_state.messages.append({"role": "assistant", "content": response})
+
+    st.button('Hombre', on_click=guardarMensaje, args=["Hombre", 2])
+
+    st.button('Mujer', on_click=guardarMensaje, args=["Mujer", 2])
+
+    st.button('Otro', on_click=guardarMensaje, args=["Otro", 2])
+
+    st.session_state.indice = 2
+    
+
+print(f"Stage_final: {st.session_state.stage}")
+
+if st.session_state.stage == 2:
+    if st.session_state.estadoEdad == 0:
+        print("dentro de stage == 2")
+        current_question = questions[st.session_state.indice]
+        with st.chat_message("assistant"):
+            response = st.write_stream(response_generator(current_question))
+            st.session_state.messages.append({"role": "assistant", "content": response})
+    
+    edad = st.selectbox(
+
+        'Selecciona tu edad',
+        ['None','18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48', '49', '50', '51', '52', '53', '54', '55', '56', '57', '58', '59', '60'],
+        placeholder="Selecciona una opcion"
+        )
+   
+
+    if edad  == 'None':
+        st.session_state.estadoEdad = 1
+    elif edad != 'None':
+        with st.chat_message("user"):
+            st.markdown(edad)
+        st.session_state.indice = 3
+        guardarEdad(edad, 3)
+
+
+
+if st.session_state.stage == 3:
+    print("dentro de stage == 3")
+    current_question = questions[st.session_state.indice]
+    with st.chat_message("assistant"):
+        response = st.write_stream(response_generator(current_question))
+    # Agrega la respuesta del asistente al historial de chat
+    st.session_state.messages.append({"role": "assistant", "content": response})
+
+    st.button('Ciudad', on_click=guardarMensaje, args=["Ciudad", 4])
+
+    st.button('Montaña', on_click=guardarMensaje, args=["Montaña", 4])
+
+    st.button('Mar', on_click=guardarMensaje, args=["Mar", 4])
+
+    st.session_state.indice = 4
+
+
+if st.session_state.stage == 4:
+    
+    if st.session_state.estadoOrigen == 0:
+        print("dentro de stage == 4")
         current_question = questions[st.session_state.indice]
         with st.chat_message("assistant"):
             response = st.write_stream(response_generator(current_question))
         # Agrega la respuesta del asistente al historial de chat
         st.session_state.messages.append({"role": "assistant", "content": response})
-        # Incrementa el índice para la siguiente pregunta
-        st.session_state.indice += 1
+
+    paisOrigen = st.selectbox(
+        'Seleccione país de origen',
+        ['None','Austria', 'Bulgaria','Suiza','Chipre','Alemania','Dinamarca','Estonia','Grecia','España','Finlandia','Francia','Croacia','Irlanda','Italia','Lituania','Luxemburgo','Letonia','Macedonia del Norte','Malta','Noruega','Polonia','Portugal','Suecia','Eslovenia','Reino Unido']
+        )
+    
+
+    if paisOrigen  == 'None':
+            st.session_state.estadoOrigen = 1
+    elif paisOrigen != 'None':
+        with st.chat_message("user"):
+            st.markdown(paisOrigen)
+        st.session_state.indice = 5
+        guardarOrigen(paisOrigen, 5)
+
+ 
+
+if st.session_state.stage == 5:
+    
+    if st.session_state.estadoFecha == 0:
+        print("dentro de stage == 5")
+        current_question = questions[st.session_state.indice]
+        with st.chat_message("assistant"):
+            response = st.write_stream(response_generator(current_question))
+        # Agrega la respuesta del asistente al historial de chat
+        st.session_state.messages.append({"role": "assistant", "content": response})
+
+    fechaViaje = st.date_input("Fecha viaje", value=None)
+
+    print(fechaViaje)
+    if fechaViaje  is None:
+        st.session_state.estadoFecha = 1
+    else:
+        with st.chat_message("user"):
+            st.markdown(fechaViaje)
+        st.session_state.indice = 6
+        guardarFecha(fechaViaje, 6)
+
 
 # Enviar datos a través de una URL (API)
-if len(st.session_state.messages) == 14:
-    pais_origen = st.session_state.messages[11]["content"]
-    edad = st.session_state.messages[7]["content"]
-    genero = map_gender(st.session_state.messages[5]["content"])
-    preferencia_viaje = map_pref(st.session_state.messages[9]["content"])
-    fecha_viaje = st.session_state.messages[13]["content"]
+if st.session_state.stage == 6:
+    
+    pais_origen = st.session_state.messages[9]["content"]
+    edad = st.session_state.messages[5]["content"]
+    genero = map_gender(st.session_state.messages[3]["content"])
+    preferencia_viaje = map_pref(st.session_state.messages[7]["content"])
+    fecha_viaje = st.session_state.messages[11]["content"]
 
     # Cambia la URL de la API a la que deseas enviar los datos
     api_url = "http://200.79.113.129/api/"
@@ -87,7 +240,9 @@ if len(st.session_state.messages) == 14:
         "typo": preferencia_viaje,
         "fecha_inicio": fecha_viaje
     }
-
+    
+    
+    
     # Envía la solicitud a la API
     responseAPI = requests.get(api_url, params=params)
 
@@ -108,6 +263,3 @@ if len(st.session_state.messages) == 14:
         with st.chat_message("assistant"):
             st.write_stream(response_generator(error_mensaje))
         st.session_state.messages.append({"role": "assistant", "content": error_mensaje})
-
-# Mostrar la tabla con la biblioteca de mensajes
-#st.table(st.session_state.messages)
