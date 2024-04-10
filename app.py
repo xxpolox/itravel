@@ -3,6 +3,11 @@ import time
 import datetime
 import requests
 import json
+from openai import OpenAI
+
+client = OpenAI(
+  organization='org-UZed72ENKkxJYExYzTO1dNqz',
+)
 
 # Streamed response emulator
 def response_generator(message):
@@ -18,7 +23,7 @@ def map_gender(gender):
 # Función para mapear Preferencia
 def map_pref(preferencia):
     pref_mapping = {"Ciudad": "city", "Montaña": "mnt", "Mar": "sea"}
-    return pref_mapping.get(preferencia, preferencia)
+    return pref_mapping.get(preferencia, preferencia)   
 
 def set_state(i):
     st.session_state.stage = i
@@ -53,6 +58,13 @@ def guardarFecha(fecha, state):
     set_state(state)
 
 st.title("iTravel Assistant - Planificación de Viajes")
+
+# Set OpenAI API key from Streamlit secrets
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"], organization=st.secrets["organization"])
+
+# Set a default model
+if "openai_model" not in st.session_state:
+    st.session_state["openai_model"] = "gpt-3.5-turbo"
 
 # Inicializar historial de chat
 if "messages" not in st.session_state:
@@ -232,13 +244,16 @@ if st.session_state.stage == 6:
     # Cambia la URL de la API a la que deseas enviar los datos
     api_url = "http://200.79.113.129/api/"
     
+
+    fecha_viaje_str = fecha_viaje.strftime("%Y-%m-%d")
+
     # Parámetros a enviar
     params = {
         "pais_origen": pais_origen,
         "age": edad,
         "sex": genero,
         "typo": preferencia_viaje,
-        "fecha_inicio": fecha_viaje
+        "fecha_inicio": fecha_viaje_str
     }
     
     
@@ -254,10 +269,32 @@ if st.session_state.stage == 6:
     api_response = json.loads(responseAPI.text)
     if api_response.get("status") == "success":
         pais_destino = api_response.get("pais_destino")
+        prompt = f"Dame una breve descripción de {pais_destino} y dame 3 lugares para visitar en dicho país."
         mensaje_asistente = f"De acuerdo con tus preferencias, te recomiendo visitar {pais_destino}."
+
         with st.chat_message("assistant"):
-            st.write_stream(response_generator(mensaje_asistente))
+                    st.write_stream(response_generator(mensaje_asistente))
         st.session_state.messages.append({"role": "assistant", "content": mensaje_asistente})
+        
+        # Display assistant response in chat message container
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            full_response = ""
+
+            stream = client.chat.completions.create(
+                model=st.session_state["openai_model"],
+                    messages=[
+                        {"role":"user", "content": prompt}
+                    ],
+                    stream=True,
+            )
+            
+            response = st.write_stream(stream)
+            st.session_state.messages.append({"role": "assistant", "content": response})
+
+            
+
+        
     else:
         error_mensaje = "Hubo un error al procesar tu solicitud. Por favor, inténtalo de nuevo más tarde."
         with st.chat_message("assistant"):
