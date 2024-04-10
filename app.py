@@ -5,10 +5,6 @@ import requests
 import json
 from openai import OpenAI
 
-client = OpenAI(
-  organization='org-UZed72ENKkxJYExYzTO1dNqz',
-)
-
 # Streamed response emulator
 def response_generator(message):
     for word in message.split():
