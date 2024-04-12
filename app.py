@@ -265,7 +265,7 @@ if st.session_state.stage == 6:
     api_response = json.loads(responseAPI.text)
     if api_response.get("status") == "success":
         pais_destino = api_response.get("pais_destino")
-        prompt = f"Dame una breve descripción de {pais_destino} y dame 3 lugares para visitar en dicho país."
+        prompt = f"Dame una breve descripción de {pais_destino} y dame 3 lugares para visitar en dicho país considerando lo siguiente: Edad del turista:{edad}, sexo:{genero}, preferencia de lugar:{preferencia_viaje} y fecha de viaje:{fecha_viaje} ."
         mensaje_asistente = f"De acuerdo con tus preferencias, te recomiendo visitar {pais_destino}."
 
         with st.chat_message("assistant"):
