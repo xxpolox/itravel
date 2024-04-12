@@ -265,8 +265,8 @@ if st.session_state.stage == 6:
     api_response = json.loads(responseAPI.text)
     if api_response.get("status") == "success":
         pais_destino = api_response.get("pais_destino")
-        prompt = f"Dame una breve descripción de {pais_destino} y dame 3 lugares para visitar en dicho país considerando lo siguiente: Edad del turista:{edad}, sexo:{genero}, preferencia de lugar:{preferencia_viaje} y fecha de viaje:{fecha_viaje} ."
-        mensaje_asistente = f"De acuerdo con tus preferencias, te recomiendo visitar {pais_destino}."
+        prompt = f"Dame una breve descripción de {pais_destino} y dame 3 lugares para visitar en dicho país considerando lo siguiente: Edad del turista:{edad}, sexo:{genero}, preferencia de lugar:{preferencia_viaje} y fecha de viaje:{fecha_viaje}, cuando entregues las recomendaciones indica que las estás entregndo basándote en estos datos ."
+        mensaje_asistente = f"Muchas gracias por la información, iTravel te recomienda visitar {pais_destino}."
 
         with st.chat_message("assistant"):
                     st.write_stream(response_generator(mensaje_asistente))
